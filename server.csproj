@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+<ItemGroup>
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="35.1.37" />
+    <PackageReference Include="Syncfusion.Blazor.WordProcessor" Version="35.1.37" />
+<PackageReference Include="Syncfusion.DocIORenderer.Net.Core" Version="35.1.37" />
+  <PackageReference Include="SkiaSharp.NativeAssets.WebAssembly" Version="4.150.3" />
+  </ItemGroup>
+</Project>

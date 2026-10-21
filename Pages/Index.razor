@@ -1,0 +1,453 @@
+﻿@page "/"
+
+@using System.Diagnostics
+@using Syncfusion.Blazor.DocumentEditor
+@using Syncfusion.DocIORenderer
+@using Syncfusion.Pdf
+
+<div class="toolbar-panel">
+
+    <div class="toolbar-row">
+
+        <select class="document-select"
+                @bind="SelectedFile">
+                <option value="Getting Started50.docx">50 Pages</option>
+                <option value="Getting Started100.docx">100 Pages</option>
+                <option value="Getting Started200.docx">200 Pages</option>
+                <option value="Getting Started500.docx">500 Pages</option>
+        </select>
+
+        <button class="action-btn primary"
+                @onclick="LoadEditor">
+            Load Data
+        </button>
+
+        <button class="action-btn"
+                @onclick="DestroyEditor">
+            Reset
+        </button>
+
+        <button class="action-btn"
+                disabled="@(!Loaded)"
+                @onclick="DownloadDocument">
+            Download
+        </button>
+
+        <button class="action-btn"
+                disabled="@(!Loaded)"
+                @onclick="ExportAsRtf">
+            Export RTF
+        </button>
+
+        <button class="action-btn"
+                disabled="@(!Loaded)"
+                @onclick="ExportAsHtml">
+            Export HTML
+        </button>
+
+        <button class="action-btn"
+                disabled="@(!Loaded)"
+                @onclick="ExportAsPdf">
+            Export PDF
+        </button>
+
+    </div>
+
+</div>
+
+<div class="editor-layout">
+
+    <div class="editor-panel">
+
+        @if (!Loaded)
+        {
+            <div class="empty-state">
+
+                <img src="empty-state.svg" />
+
+                <div class="empty-state-text">
+                    Select a document size and click
+                    Load Data to start performance testing.
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <SfDocumentEditorContainer Height="100%"
+                                       @ref="Container"
+                                       EnableToolbar="true">
+
+                <DocumentEditorContainerEvents
+                    Created="OnCreated">
+                </DocumentEditorContainerEvents>
+
+            </SfDocumentEditorContainer>
+        }
+
+    </div>
+
+    <div class="metrics-panel">
+
+        <div class="metrics-header">
+            Performance Metrics
+        </div>
+
+        <div class="metrics-body">
+
+            <div class="metric-card">
+                <span>Component Load</span>
+                <span>@Metrics.ComponentLoad ms</span>
+            </div>
+
+            <div class="metric-card">
+                <span>Document Open</span>
+                <span>@Metrics.DocumentOpen ms</span>
+            </div>
+
+            <div class="metric-card">
+                <span>Download</span>
+                <span>@Metrics.Download ms</span>
+            </div>
+
+            <div class="metric-card">
+                <span>RTF Export</span>
+                <span>@Metrics.RtfExport ms</span>
+            </div>
+
+            <div class="metric-card">
+                <span>HTML Export</span>
+                <span>@Metrics.HtmlExport ms</span>
+            </div>
+
+            <div class="metric-card">
+                <span>PDF Export</span>
+                <span>@Metrics.PdfExport ms</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+@code {
+
+    private SfDocumentEditorContainer? Container;
+
+    private bool Loaded;
+
+    private DateTime StartTime;
+    [Inject]
+    IJSRuntime JS { get; set; } = default!;
+    @inject IWebHostEnvironment Environment
+
+    private class BenchmarkMetrics
+{
+    public long ComponentLoad { get; set; }
+    public long DocumentOpen { get; set; }
+    public long Download { get; set; }
+    public long RtfExport { get; set; }
+    public long HtmlExport { get; set; }
+    public long PdfExport { get; set; }
+}
+
+private BenchmarkMetrics Metrics = new();
+
+private string SelectedFile = "Getting Started50.docx";
+
+private readonly List<string> Documents =
+[
+    "Getting Started50.docx",
+    "Getting Started100.docx",
+    "Getting Started200.docx",
+    "Getting Started500.docx"
+];
+    private async Task OpenDocument()
+    {
+        await JS.InvokeVoidAsync(
+            "openFilePicker",
+            "fileUpload");
+    }
+
+    private void LoadEditor()
+{
+    if (Loaded)
+    {
+        _ = LoadDocument();
+        return;
+    }
+
+    StartTime = DateTime.Now;
+
+    Loaded = true;
+}
+
+    private async void OnCreated(object args)
+{
+    Metrics.ComponentLoad =
+        (long)(DateTime.Now - StartTime)
+        .TotalMilliseconds;
+
+    await LoadDocument();
+
+    StateHasChanged();
+}
+
+    private void DestroyEditor()
+    {
+        if (Container == null)
+            return;
+
+        var start = DateTime.Now;
+
+        Container.Dispose();
+
+        Loaded = false;
+
+        Metrics = new BenchmarkMetrics();
+
+SelectedFile =
+    "Getting Started50.docx";
+    }
+
+    private async Task DownloadDocument()
+    {
+        if (Container == null)
+            return;
+
+        var start = DateTime.Now;
+
+        await Container.DocumentEditor.SaveAsync(
+            "sample",
+            FormatType.Docx);
+
+        Metrics.Download =
+    (long)(DateTime.Now - start)
+    .TotalMilliseconds;
+
+StateHasChanged();
+    }
+    private async Task LoadDocument()
+{
+    if (Container == null)
+        return;
+
+    Stopwatch watch = Stopwatch.StartNew();
+
+    var path = Path.Combine(
+    Environment.WebRootPath,
+    "Documents",
+    SelectedFile);
+
+var fileBytes = await File.ReadAllBytesAsync(path);
+
+    Stream stream =
+        new MemoryStream(fileBytes);
+
+    WordDocument document =
+        WordDocument.Load(
+            stream,
+            ImportFormatType.Docx);
+
+    stream.Dispose();
+
+    string sfdt =
+        System.Text.Json.JsonSerializer
+            .Serialize(document);
+
+    document.Dispose();
+
+    await Container.DocumentEditor
+        .OpenAsync(sfdt);
+
+    watch.Stop();
+
+    Metrics.DocumentOpen =
+        watch.ElapsedMilliseconds;
+
+    StateHasChanged();
+}
+    public async Task ExportAsPdf()
+    {
+        Stopwatch totalWatch = Stopwatch.StartNew();
+
+        // Serialization Timing
+        Stopwatch serializationWatch = Stopwatch.StartNew();
+
+        SfDocumentEditor editor = Container.DocumentEditor;
+
+        string base64Data =
+            await editor.SaveAsBlobAsync(FormatType.Docx);
+
+        serializationWatch.Stop();
+
+        long serializationTime =
+            serializationWatch.ElapsedMilliseconds;
+
+        // Conversion Timing
+        Stopwatch conversionWatch = Stopwatch.StartNew();
+
+        byte[] data =
+            Convert.FromBase64String(base64Data);
+
+        base64Data = null;
+
+        Stream stream =
+            new MemoryStream(data);
+
+        data = null;
+
+        Syncfusion.DocIO.DLS.WordDocument doc =
+            new Syncfusion.DocIO.DLS.WordDocument(
+                stream,
+                Syncfusion.DocIO.FormatType.Docx);
+
+        DocIORenderer render =
+            new DocIORenderer();
+
+        Syncfusion.Pdf.PdfDocument pdfDocument =
+            render.ConvertToPDF(doc);
+
+        MemoryStream pdfStream =
+            new MemoryStream();
+
+        pdfDocument.Save(pdfStream);
+
+        pdfStream.Position = 0;
+
+        conversionWatch.Stop();
+
+        long conversionTime =
+            conversionWatch.ElapsedMilliseconds;
+
+        totalWatch.Stop();
+
+        long totalTime =
+            totalWatch.ElapsedMilliseconds;
+
+        Metrics.PdfExport =
+    totalWatch.ElapsedMilliseconds;
+
+StateHasChanged();
+
+        await JS.InvokeVoidAsync(
+            "downloadFileFromStream",
+            "Document.pdf",
+            new DotNetStreamReference(pdfStream));
+
+        pdfDocument.Close();
+        doc.Close();
+        stream.Close();
+    }
+    public async Task ExportAsRtf()
+    {
+        Stopwatch totalWatch = Stopwatch.StartNew();
+
+        Stopwatch serializationWatch = Stopwatch.StartNew();
+
+        SfDocumentEditor editor = Container.DocumentEditor;
+
+        string base64Data = await editor.SaveAsBlobAsync(FormatType.Docx);
+
+        serializationWatch.Stop();
+
+        long serializationTime =
+            serializationWatch.ElapsedMilliseconds;
+
+        Stopwatch conversionWatch = Stopwatch.StartNew();
+
+        byte[] data = Convert.FromBase64String(base64Data);
+
+        Stream stream = new MemoryStream(data);
+
+        Syncfusion.DocIO.DLS.WordDocument doc =
+            new Syncfusion.DocIO.DLS.WordDocument(
+                stream,
+                Syncfusion.DocIO.FormatType.Docx);
+
+        MemoryStream outputStream =
+            new MemoryStream();
+
+        doc.Save(
+            outputStream,
+            Syncfusion.DocIO.FormatType.Rtf);
+
+        outputStream.Position = 0;
+
+        conversionWatch.Stop();
+
+        long conversionTime =
+            conversionWatch.ElapsedMilliseconds;
+
+        totalWatch.Stop();
+
+        Metrics.RtfExport =
+    totalWatch.ElapsedMilliseconds;
+
+StateHasChanged();
+
+        await JS.InvokeVoidAsync(
+            "downloadFileFromStream",
+            "Document.rtf",
+            new DotNetStreamReference(outputStream));
+
+        doc.Close();
+        stream.Close();
+    }
+    public async Task ExportAsHtml()
+    {
+        Stopwatch totalWatch = Stopwatch.StartNew();
+
+        Stopwatch serializationWatch = Stopwatch.StartNew();
+
+        SfDocumentEditor editor = Container.DocumentEditor;
+
+        string base64Data = await editor.SaveAsBlobAsync(FormatType.Docx);
+
+        serializationWatch.Stop();
+
+        long serializationTime =
+            serializationWatch.ElapsedMilliseconds;
+
+        Stopwatch conversionWatch = Stopwatch.StartNew();
+
+        byte[] data = Convert.FromBase64String(base64Data);
+
+        Stream stream = new MemoryStream(data);
+
+        Syncfusion.DocIO.DLS.WordDocument doc =
+            new Syncfusion.DocIO.DLS.WordDocument(
+                stream,
+                Syncfusion.DocIO.FormatType.Docx);
+
+        MemoryStream outputStream =
+            new MemoryStream();
+
+        doc.Save(
+            outputStream,
+            Syncfusion.DocIO.FormatType.Html);
+
+        outputStream.Position = 0;
+
+        conversionWatch.Stop();
+
+        long conversionTime =
+            conversionWatch.ElapsedMilliseconds;
+
+        totalWatch.Stop();
+
+        Metrics.HtmlExport =
+    totalWatch.ElapsedMilliseconds;
+
+StateHasChanged();
+
+
+        await JS.InvokeVoidAsync(
+            "downloadFileFromStream",
+            "Document.html",
+            new DotNetStreamReference(outputStream));
+
+        doc.Close();
+        stream.Close();
+    }
+}

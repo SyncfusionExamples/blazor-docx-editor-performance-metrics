@@ -13,10 +13,6 @@ This sample demonstrates performance benchmarking scenarios using the Syncfusion
 - Measure RTF, HTML, and PDF export performance.
 - View benchmark metrics directly within the application.
 
-## Demo
-
-<!-- TODO: Add benchmark sample screenshot/GIF from repository assets. -->
-
 ## How to Run the Sample
 
 This sample consists of a Blazor client application and an ASP.NET Core backend service. Both applications must be running.
@@ -48,18 +44,18 @@ dotnet run
 Open the URL displayed in the terminal after the application starts.
 
 
-# Resources
+## Resources
 
-- **Product page:** Syncfusion® Blazor DOCX Editor
-- **Documentation:** Syncfusion® Blazor DOCX Editor - Documentation
-- **Online demo:** Syncfusion® Blazor DOCX Editor - Online demo
+- **Product page:** [Syncfusion Blazor DOCX Editor](https://www.syncfusion.com/docx-editor-sdk/blazor-docx-editor)
+- **Documentation:** [Syncfusion Blazor DOCX Editor - Documentation](https://help.syncfusion.com/document-processing/word/word-processor/blazor/overview)
+- **Online demo:** [Syncfusion Blazor DOCX Editor - Online demo](https://document.syncfusion.com/demos/docx-editor/blazor-server/document-editor/default-functionalities)
 
-# Support and feedback
+## Support and feedback
 
-For any other queries, reach our Syncfusion® support team or post the queries through the community forums.
+For any other queries, reach our [Syncfusion support team](https://support.syncfusion.com/?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples) or post the queries through the [community forums](https://www.syncfusion.com/forums?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples). 
 
-Request new feature through Syncfusion® feedback portal.
+Request new feature through [Syncfusion feedback portal](https://www.syncfusion.com/feedback?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples). 
 
-# License
+## License
 
-This is a commercial product and requires a paid license for possession or use. Syncfusion's licensed software, including this component, is subject to the terms and conditions of Syncfusion's EULA. You can purchase a license here or start a free 30-day trial here.
+This is a commercial product and requires a paid license for possession or use. Syncfusion's licensed software, including this component, is subject to the terms and conditions of [Syncfusion's EULA](https://www.syncfusion.com/license/studio/35.1.37/syncfusion_essential_studio_eula.pdf?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples). You can purchase a license [here](https://www.syncfusion.com/sales/products?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples) or start a free 30-day trial [here](https://www.syncfusion.com/account/manage-trials/start-trials?utm_source=github&utm_medium=listing&utm_campaign=github-github-documenteditor-examples).
